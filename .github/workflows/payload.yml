@@ -5,7 +5,7 @@ on:
       - main
       - master
     paths:
-      - '*.yaml'
+      - '**api/**.yaml'
 
 jobs:
   send_payload:
