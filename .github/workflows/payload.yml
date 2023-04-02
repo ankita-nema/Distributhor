@@ -5,7 +5,7 @@ on:
       - main
       - master
     paths:
-      - '*/Dataextraction/api/*'
+      - '/Dataextraction/api/*yaml'
 
 jobs:
   send_payload:
