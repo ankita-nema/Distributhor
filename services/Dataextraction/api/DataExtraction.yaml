@@ -117,7 +117,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jobResponse'
         401:
-          description: Unauthorized. Invalid credentials.
+          description: Unauthorized. Invalid credentialsjsdhjadj.
         403:
           description: Forbidden. User does not have permission to view job status.
         404:
