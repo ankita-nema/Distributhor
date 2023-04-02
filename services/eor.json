@@ -1,0 +1,225 @@
+{
+  "$schema": "https://github.com/nice-cxone/cxone-service-registry/blob/master/validation/jsonSchema/eor/1-0-0.json",
+  "serviceName": "sup-dfo-contact-details-consumer",
+  "productName": "supervisor",
+  "description": "This component listens to DFO Contacts Kinesis Stream to get real time updates of the DFO Contacts (Voice, Email, Chat, etc.) and pushes the same updates to the internal kinesis stream <env>-SupInternal.",
+  "SLA": "99.9%",
+  "image": "https://tlvconfluence01.nice.com/download/attachments/991223574/SupportingCalculatedUpdates.png?api=v2",
+  "team": {
+    "name": "Warriors",
+    "teamsChannel": {
+      "name": "CXone Supervisor",
+      "url": "https://teams.microsoft.com/l/channel/19%3ac636357ca1a34bfc8e0f9e007fa2aeb5%40thread.skype/CXone%2520Supervisor%2520NOC%2520Communication?groupId=03105700-8b22-4f7b-a4cf-1b738bbcea94&tenantId=7123dabd-0e87-4da9-9cb9-b7ec82011aad"
+    },
+    "directory": "https://tlvconfluence.nice.com",
+    "email": "WCX-GTC-CXone-Supervisor@nice.com",
+    "xMattersGroup": "CXOne Team Supervisor"
+  },
+  "delivery": {
+    "release": "22.3",
+    "pipelines": [
+      {
+        "name": "saas-wfo-ms-sup-dfo-contact-consumer",
+        "url": "https://cxone-ci.niceincontact.com/job/Application2/job/Supervisor/job/ECS/job/saas-wfo-ms-sup-dfo-contact-details-consumer/"
+      }
+    ],
+    "sourceRepos": [
+      {
+        "name": "saas-wfo-ms-sup-dfo-contact-details-consumer",
+        "url": "https://github.com/nice-cxone/saas-wfo-ms-sup-dfo-contact-details-consumer"
+      }
+    ],
+    "issueTracking": "https://tlvjira02.nice.com/secure/RapidBoard.jspa?rapidView=2516",
+    "artifactRepo": "https://nice-devops-369498121101.d.codeartifact.us-west-2.amazonaws.com/maven/cxone-maven/com/nice/saas/wfo/wfo-sup-dfo-contact-details-consumer/",
+    "serviceScope": "global",
+    "deploymentMethod": "automated",
+    "rollbackMethod": "manual",
+    "followsPipelineStandards": true
+  },
+  "infrastructure": {
+    "hostEnvironment": {
+      "provider": "AWS",
+      "type": "ECS",
+      "accounts": [
+        "wfoprod","wfocomplianceprod"
+      ]
+    },
+    "loadBalancing": {
+      "type": "Other"
+    },
+    "scaling": {
+      "type": "horizontal",
+      "automatic": false
+    },
+    "tags": [
+      {
+        "key": "Product",
+        "value": "Supervisor"
+      },
+      {
+        "key": "Service",
+        "value": "sup-dfo-contact-details-consumer"
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "Kinesis Stream (IC AWS Account) - entitymanagement-XX-digi-contact-events-stream (External)"
+    },
+    {
+      "name": "Kinesis Stream - SupInternal (Internal)"
+    },
+    {
+      "name": "S3 (Internal)"
+    },
+    {
+      "name": "Redis (Internal)"
+    }
+  ],
+  "consumers": [
+    {
+      "name": "sup-data-collector",
+      "type" : "internal"
+    },
+    {
+      "name": "sup-update-provider",
+      "type" : "internal"
+    }
+  ],
+
+  "testing": {
+    "xrayTestPlans": [
+      "CXSUP-353"
+    ],
+    "unitTestCoverage": {
+      "name": "Unit Test Report",
+      "url": "https://sonar.devops.niceincontact.com/dashboard?id=saas-wfo-ms-sup-dfo-contact-details-consumer"
+    },
+    "staticCodeAnalysis": {
+      "name": "SCA Report by SonarQube",
+      "url": "https://sonar.devops.niceincontact.com/dashboard?id=saas-wfo-ms-sup-dfo-contact-details-consumer"
+    },
+    "integrationTests": {
+      "name": "Integration Test Report",
+      "url": "https://cxone-ci.niceincontact.com/job/Application2/job/Supervisor/job/ECS/job/saas-wfo-ms-sup-dfo-contact-details-consumer/Cucumber_20Report_20test/"
+    },
+    "performanceTests": {
+      "name": "NA",
+      "url": "https://some.url/path/tbd"
+    },
+    "staticAppSecTestReport" : {
+      "name": "Veracode Report",
+      "url": "https://analysiscenter.veracode.com/auth/index.jsp#SandboxView:46761:1409705:4436203"
+    },
+    "softwareCompositionAnalysisReport": {
+      "name": "BlackDuck Report",
+      "url": "https://nice2.app.blackduck.com/api/projects/05c59a15-10d3-4807-93e0-a244794371bb"
+    }
+  },
+  "reviews": {
+    "architectureReview": {
+      "reviewer": "Brijesh Upadhyay",
+      "date": "2022-04-27",
+      "approved": true
+    },
+    "sreReview": {
+      "reviewer": "Rahul Ladla",
+      "date": "2022-05-19",
+      "approved": true
+    }
+  },
+  "documentation": {
+    "architecture": [
+      {
+        "name": "High-Level Architecture for CXone Supervisor",
+        "url": "https://tlvconfluence01.nice.com/display/WFM/Supervisor+Architecture"
+      }
+    ],
+    "pipeline": [
+      {
+        "name": "saas-wfo-ms-sup-dfo-contact-consumer",
+        "url": "https://cxone-ci.niceincontact.com/job/Application2/job/Supervisor/job/ECS/job/saas-wfo-ms-sup-dfo-contact-details-consumer/"
+      }
+    ],
+    "versioning": [
+      {
+        "name": "Versioning",
+        "url": "https://tlvconfluence01.nice.com/display/WFM/Versioning"
+      }
+    ],
+    "reliability": [
+      {
+        "name": "Reliability",
+        "url": "https://tlvconfluence01.nice.com/display/WFM/Supportability"
+      }
+    ],
+    "runbook": [
+      {
+        "name": "Runbook",
+        "url": "https://tlvconfluence01.nice.com/display/WFM/CXone+Supervisor+-+Runbook"
+      }
+    ]
+  },
+  "monitoring": {
+    "dashboards": [
+      {
+        "name": "Cloudwatch dashboard",
+        "url": "https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name=production-Supervisor-Dashboard"
+      },
+      {
+        "name" : "BMC Alarms",
+        "url" : "https://tlvconfluence01.nice.com/display/WFM/CXone+Supervisor+-+BMC+Alarms"
+      }
+    ],
+    "metrics" : [
+      {
+        "name": " TargetResponseTime ",
+        "type": "latency",
+        "description": "https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#metricsV2:graph=~(period~60~region~'us-west-2~start~'-PT3H~end~'P0D~view~'timeSeries~stacked~false~stat~'Maximum~metrics~(~(~'production.service.metrics~'Reported.sup-update-provider-service.PERFORMANCE.packetProcessingTimeConsumerTillEnd~'type~'gauge)));query=~'*7bproduction.service.metrics*2ctype*7d*20PacketProcessingTime"
+      },
+      {
+        "name": " CPUUtilization",
+        "type": "saturation",
+        "description": "https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#metricsV2:graph=~(metrics~(~(~'AWS*2fECS~'CPUUtilization~'ClusterName~'production-supervisor~'ServiceName~'sup-dfo-contact-details-consumer))~period~300~stat~'Average~region~'us-west-2~start~'-PT12H~end~'P0D)"
+      },
+      {
+        "name": "RequestCount",
+        "type": "traffic",
+        "description": "This Service is a background kinesis stream processing"
+      },
+      {
+        "name" : "Packet Processing Time should not be more than 2 seconds",
+        "type" : "error",
+        "description" : "https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#metricsV2:graph=~(view~'timeSeries~stacked~false~region~'us-west-2~start~'-PT3H~end~'P0D~stat~'Average~period~300~metrics~(~(~'production.service.metrics~'Reported.sup-dfo-contact-details-consumer-service.PERFORMANCE.packetProcessingTimeInternal~'type~'gauge)));query=~'*7bproduction.service.metrics*2ctype*7d*20packetProcessingTime"
+      }
+    ],
+    "alarms": [
+      {
+        "name": "{env}-supervisor-cloudwatch-alarms-SupPacketProcessingTimeConsumerTillEndAlarmForUP",
+        "description": "Alarm if packet processing time consumer till end failed",
+        "threshold": "packetProcessingTimeConsumerTillEnd > 1000 for 10 datapoints within 10 minutes"
+      },
+      {
+        "name": "{env}-supervisor-cloudwatch-alarms-SupDFOContactDetailsConsumerServiceCPUAlarm",
+        "description": "Alarm if CPUUtilization of Supervisor DFO Contact Details Consumer Service was greater than 70%",
+        "threshold": "CPUUtilization > 70 within 15 minutes"
+      }
+    ],
+    "logs": {
+      "location": [
+        {
+          "name": "CloudWatch Log Group: production-sup-dfo-contact-details-consumer",
+          "url": "https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#logsV2:log-groups/log-group/production-sup-dfo-contact-details-consumer/log-events"
+        }
+      ],
+      "followsLoggingGuidelines": true,
+      "searchStrings": [
+        {
+          "searchFor": "exception:",
+          "description": "Check for any exception",
+          "type": "error"
+        }
+      ]
+    }
+  }
+}
