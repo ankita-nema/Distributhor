@@ -31,7 +31,7 @@
     ],
     "issueTracking": "https://tlvjira02.nice.com/secure/RapidBoard.jspa?rapidView=2516",
     "artifactRepo": "https://nice-devops-369498121101.d.codeartifact.us-west-2.amazonaws.com/maven/cxone-maven/com/nice/saas/wfo/wfo-sup-dfo-contact-details-consumer/",
-    "serviceScope": "global",
+    "serviceScope": "globaljsj",
     "deploymentMethod": "automated",
     "rollbackMethod": "manual",
     "followsPipelineStandards": true
