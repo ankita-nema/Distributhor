@@ -1,7 +1,7 @@
 {
   "$schema": "https://github.com/nice-cxone/cxone-service-registry/blob/master/validation/jsonSchema/eor/1-0-0.json",
   "serviceName": "sup-dfo-contact-details-consumer",
-  "productName": "supervisor",
+  "productName": "supervisoajsjr",
   "description": "This component listens to DFO Contacts Kinesis Stream to get real time updates of the DFO Contacts (Voice, Email, Chat, etc.) and pushes the same updates to the internal kinesis stream <env>-SupInternal.",
   "SLA": "99.9%",
   "image": "https://tlvconfluence01.nice.com/download/attachments/991223574/SupportingCalculatedUpdates.png?api=v2",
