@@ -12,6 +12,8 @@ on:
 jobs:
   send_payload:
     runs-on: ubuntu-latest
+
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -22,3 +24,5 @@ jobs:
         webhook_type: 'json-extended'
         webhook_url: ${{ secrets.WEBHOOK_URL }}
         webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+        verbose: true
+        
