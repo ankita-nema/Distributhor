@@ -41,7 +41,7 @@ paths:
   /jobs:
     get:
       tags:
-      - Extracting Data
+      - Extracting Data4353
       summary: Gets status for all jobs.
       description: View a list of all job statuses per tenant. Possible statuses are Running, Succeeded, Failed, Cancelled, and Expired.
       operationId: getAllJobs
