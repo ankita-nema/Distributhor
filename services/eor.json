@@ -96,7 +96,7 @@
       "url": "https://sonar.devops.niceincontact.com/dashboard?id=saas-wfo-ms-sup-dfo-contact-details-consumer"
     },
     "staticCodeAnalysis": {
-      "name": "SCA Report by SonarQube",
+      "name": "SCA Report by SonarQubewer",
       "url": "https://sonar.devops.niceincontact.com/dashboard?id=saas-wfo-ms-sup-dfo-contact-details-consumer"
     },
     "integrationTests": {
