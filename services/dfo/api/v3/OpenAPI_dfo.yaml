@@ -1,0 +1,4927 @@
+openapi: 3.0.3
+info:
+  title: DFO API 3.0
+  version: V3
+servers:
+  - url: 'https://api-de-{region}.niceincontact.com/dfo/3.0'
+    description: Production API server
+    variables:
+      region:
+        default: na1
+        description: Region of API server
+        enum:
+          - na1
+          - eu1
+          - au1
+          - uk1
+          - ca1
+          - jp1
+security:
+  - BearerAuth: []
+paths:
+  '/channels/{channelId}/messages':
+    post:
+      tags:
+        - Message
+      summary: Create message in DFO
+      description: Store message in DFO platform
+      parameters:
+        - $ref: '#/components/parameters/ChannelIdInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewMessage'
+      responses:
+        '201':
+          description: Message was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  consumerContact:
+                    $ref: '#/components/schemas/Contact'
+        '400':
+          description: Channel was not created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Channel was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/channels/{channelId}/inbound':
+    post:
+      tags:
+        - Message
+      summary: Send inbound message
+      description: 'Send message to connected channel and store message in DFO platform. When using with CXone Email Channel, field thread.threadName is mandatory.'
+      parameters:
+        - $ref: '#/components/parameters/ChannelIdInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendInbound'
+            examples:
+              Text message:
+                $ref: '#/components/examples/SendInboundText'
+      responses:
+        '201':
+          description: Message was sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  consumerContact:
+                    $ref: '#/components/schemas/Contact'
+        '400':
+          description: Inbound message was not sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Channel was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Post saving version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/channels/{channelId}/outbound':
+    post:
+      tags:
+        - Message
+      summary: Send outbound message
+      description: Send message to connected channel and store message in DFO platform
+      parameters:
+        - $ref: '#/components/parameters/ChannelIdInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendOutbound'
+            examples:
+              Text message:
+                $ref: '#/components/examples/SendOutboundTextToExistingThread'
+              Quick Replies:
+                $ref: '#/components/examples/SendOutboundExampleQuickReplies'
+              Rich link:
+                $ref: '#/components/examples/SendOutboundExampleRichLink'
+              List Picker:
+                $ref: '#/components/examples/SendOutboundExampleListPicker'
+              Email - HTML message:
+                $ref: '#/components/examples/SendOutboundEmailExample'
+              WhatsApp - Text template:
+                $ref: '#/components/examples/SendOutboundWhatsappExampleTemplate'
+              DFO chat - Menu:
+                $ref: '#/components/examples/SendOutboundChatExampleMenu'
+              DFO chat - Gallery:
+                $ref: '#/components/examples/SendOutboundChatExampleGallery'
+              DFO chat - Text and buttons:
+                $ref: '#/components/examples/SendOutboundChatExampleTextAndButtons'
+              DFO chat - Deep link:
+                $ref: '#/components/examples/SendOutboundChatExampleDeepLink'
+              DFO chat - Custom element:
+                $ref: '#/components/examples/SendOutboundChatExampleCustomElement'
+      responses:
+        '201':
+          description: Message was sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  consumerContact:
+                    $ref: '#/components/schemas/Contact'
+        '400':
+          description: Outbound message was not sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Channel was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Post saving version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/channels/{channelId}/threads/{threadIdOnExternalPlatform}':
+    put:
+      tags:
+        - Channel
+      summary: Update thread flags
+      parameters:
+        - $ref: '#/components/parameters/ChannelIdInPath'
+        - name: threadIdOnExternalPlatform
+          in: path
+          description: ID of the thread on external platform
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                canAddMoreMessages:
+                  type: boolean
+                  description: Is it possible to add new messages to the thread
+      responses:
+        '204':
+          description: Thread was updated
+        '400':
+          description: Thread was not updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Channel or Thread was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/channels/{channelId}/external-platform-templates':
+    get:
+      tags:
+        - Channel
+      summary: Get list of external platform templates
+      parameters:
+        - $ref: '#/components/parameters/ChannelIdInPath'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRecords:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExternalPlatformTemplate'
+                  _links:
+                    $ref: '#/components/schemas/Links'
+        '400':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Channel was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /channels:
+    post:
+      tags:
+        - Channel
+      summary: Create new DFO channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewChannel'
+      responses:
+        '201':
+          description: Channel was created
+        '400':
+          description: Channel was not created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    get:
+      tags:
+        - Channel
+      summary: Get list of existing channels
+      parameters:
+        - name: 'id[]'
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'IDs of requested existing channels. If omitted, all channels will be returned.'
+          examples:
+            oneId:
+              summary: Example of a single Id
+              value:
+                - channel-321
+            multipleIds:
+              summary: Example of multiple Ids
+              value:
+                - channel-321
+                - channel-654
+                - channel-987
+        - name: isPrivate
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: 'If true, only private channels will be returned.'
+        - name: hasManualOutboundFlow
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: 'If true, only channels with manual flow will be returned.'
+        - name: withPermissionToManualOutbound
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: 'If true, only channels with reply permission for logged in user will be returned.'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChannelV2'
+  /tags:
+    get:
+      tags:
+        - Tag
+      summary: Get list of Tags
+      parameters:
+        - name: 'id[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Ids of tags
+          examples:
+            oneId:
+              summary: Example of a single Id
+              value:
+                - 123
+            multipleIds:
+              summary: Example of multiple Ids
+              value:
+                - 123
+                - 456
+                - 789
+          required: false
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hits:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+  /contacts:
+    get:
+      tags:
+        - Contact
+      summary: Get list of Contacts based on filter
+      externalDocs:
+        description: Contact search
+        url: 'https://support.brandembassy.com/hc/en-us/articles/360019510533-Case-search'
+      parameters:
+        - name: 'channel[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Ids of channels
+          examples:
+            oneId:
+              summary: Example of a single ID
+              value:
+                - ind_8cd2e166-2705-4980-b420-81a133337394
+            multipleIds:
+              summary: Example of multiple IDs
+              value:
+                - ind_8cd2e166-2705-4980-b420-81a133337394
+                - fb_8cd2e166-2705-4980-b420-81a133337399
+          required: false
+        - name: 'tag[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Ids of tags
+          examples:
+            oneId:
+              summary: Example of a single ID
+              value:
+                - 5
+            multipleIds:
+              summary: Example of multiple IDs
+              value:
+                - 1
+                - 5
+                - 7
+          required: false
+        - name: 'routingQueueId[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Ids of Routing Queues
+          examples:
+            oneId:
+              summary: Example of a single ID
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+            multipleIds:
+              summary: Example of multiple IDs
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+                - 201ce3ab-0ef3-4d45-a4c6-dedeec8901ee
+          required: false
+        - name: 'status[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Status
+          examples:
+            oneStatus:
+              summary: Example of a single status
+              value:
+                - new
+            multipleStatuses:
+              summary: Example of multiple statuses
+              value:
+                - new
+                - resolved
+          required: false
+        - name: 'endUserIdOnExternalPlatform[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Ids of End Userts on External Platform
+          examples:
+            oneId:
+              summary: Example of a single ID
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+            multipleIds:
+              summary: Example of multiple IDs
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+                - 201ce3ab-0ef3-4d45-a4c6-dedeec8901ee
+          required: false
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Contact Query search
+          examples:
+            notEqualSingle:
+              summary: Field not equal to single value
+              value: NOT (status = closed)
+            singleIsNull:
+              summary: Field is null
+              value: ownerAssignee IS NULL
+            multipleValuesSearch:
+              summary: Use multiple search values for field
+              value: 'threadId IN ("value1", "value2")'
+          required: false
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hits:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+        '400':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiError'
+                  uid:
+                    type: string
+                    description: UID for debug purposes
+  '/contacts/{contactNumber}':
+    get:
+      tags:
+        - Contact
+      summary: Get Contact detail
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    put:
+      tags:
+        - Contact
+      summary: Update of selected contact's properties
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                routingQueuePriority:
+                  type: integer
+                  description: New Contact's routing queue priority
+                  minimum: 0
+                  maximum: 1000
+                proficiency:
+                  type: object
+                  description: New Contact's proficiency
+                  properties:
+                    from:
+                      type: integer
+                      minimum: 1
+                      maximum: 20
+                    to:
+                      type: integer
+                      minimum: 1
+                      maximum: 20
+                  required:
+                    - from
+                    - to
+      responses:
+        '204':
+          description: Contact was changed
+        '400':
+          description: Contact was not changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/detail/pagination':
+    get:
+      tags:
+        - Contact
+      summary: Get pagination of contact detail
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pagination'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/messages':
+    get:
+      tags:
+        - Contact
+      summary: Get Contact messages
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hits:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MessageDetail'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/inbox-assignment':
+    put:
+      tags:
+        - Contact
+      summary: Change inbox assignee for contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInboxAssignmentUpdate'
+      responses:
+        '200':
+          description: Inbox assignee was changed
+        '400':
+          description: Inbox assignee was not changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Contact
+      summary: Unassign inbox assignee from contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      responses:
+        '200':
+          description: Inbox assignee was unassigned
+        '400':
+          description: Inbox assignee was not changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/message-drafts':
+    post:
+      tags:
+        - Contact
+      summary: Create message draft
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - messageContent
+                - approvalRoutingQueue
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                messageContent:
+                  $ref: '#/components/schemas/MessageContent'
+                approvalRoutingQueue:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                  required:
+                    - id
+                replyToMessage:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                  required:
+                    - id
+                replyByChannel:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                  required:
+                    - id
+                recipients:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Recipient'
+                title:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Attachment'
+      responses:
+        '200':
+          description: Message draft was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Message draft was not created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/message-drafts/{messageDraftId}':
+    put:
+      tags:
+        - Contact
+      summary: Update message draft
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - $ref: '#/components/parameters/MessageDraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messageContent:
+                  $ref: '#/components/schemas/MessageContent'
+                replyByChannel:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                  required:
+                    - id
+                recipients:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Recipient'
+                title:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Attachment'
+      responses:
+        '204':
+          description: Message draft was updated
+        '400':
+          description: Message draft was not updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message draft was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Contact
+      summary: Delete message draft
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - $ref: '#/components/parameters/MessageDraftId'
+      responses:
+        '204':
+          description: Message draft was deleted
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message draft was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/message-drafts/{messageDraftId}/refusal':
+    post:
+      tags:
+        - Contact
+      summary: Refusal message draft
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - $ref: '#/components/parameters/MessageDraftId'
+      responses:
+        '204':
+          description: Message draft was refused
+        '400':
+          description: Message draft was not refused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/message-drafts/{messageDraftId}/approval':
+    post:
+      tags:
+        - Contact
+      summary: Approval of message draft
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - $ref: '#/components/parameters/MessageDraftId'
+      responses:
+        '200':
+          description: Message draft was approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Message draft was not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message draft not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/custom-fields':
+    put:
+      tags:
+        - Contact
+      summary: Change custom field values for contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomField'
+      responses:
+        '200':
+          description: Custom field values were updated
+        '400':
+          description: Custom field values were not saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/custom-fields/{customFieldIdentifier}':
+    delete:
+      tags:
+        - Contact
+      summary: Remove custom field value from Contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - $ref: '#/components/parameters/CustomFieldIdentifierInPath'
+      responses:
+        '204':
+          description: Custom field value was removed from Contact
+        '400':
+          description: Custom field value in Contact cannot be removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact or Custom field value in Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Custom field value was not removed from Contact due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/routing-queue':
+    put:
+      tags:
+        - Contact
+      summary: Change routing queue for contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRoutingQueueUpdate'
+      responses:
+        '200':
+          description: Routing Queue value was updated
+        '400':
+          description: Routing Queue value was not saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact or Routing Queue was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/agent-contacts/{agentContactId}/close':
+    put:
+      tags:
+        - Contact
+      summary: Close agent contact in contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+        - name: agentContactId
+          in: path
+          description: ID of the agent contact
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent contact is already closed or has been closed
+        '400':
+          description: Agent contact was not closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Agent contact or Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/status':
+    put:
+      tags:
+        - Contact
+      summary: Change status of contact
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactStatusUpdate'
+      responses:
+        '204':
+          description: Status of contact was updated
+        '400':
+          description: Status of contact was not saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/contacts/{contactNumber}/abandon':
+    post:
+      tags:
+        - Contact
+      summary: Set contact as abandoned
+      parameters:
+        - $ref: '#/components/parameters/ContactNumberInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: Set abandon in contact
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - abandon
+                    - expired
+                    - shortAbandon
+              required:
+                - type
+      responses:
+        '204':
+          description: Contact was marked as abandoned
+        '400':
+          description: Contact was not marked as abandoned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Contact was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /consumer-contact-custom-fields:
+    get:
+      tags:
+        - Custom fields
+      summary: Get definition of Contact's Custom Fields
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomFieldDefinition'
+  /customers:
+    get:
+      tags:
+        - Customer
+      summary: Get list of Customers based on filter
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Customer query search
+          examples:
+            notSimilar:
+              summary: Field value is not similar
+              value: NOT (fullName ~ john)
+            idOnExternalPlatformEquals:
+              summary: ID on external platform equals a value
+              value: identityIdOnExternalPlatform = 123456efa
+            multipleValuesSearch:
+              summary: Use multiple search values for field
+              value: 'identityIdOnExternalPlatform IN (123456efa, bc6582)'
+          required: false
+        - name: limit
+          in: query
+          description: Maximum count of returned entities per page.
+          required: false
+          schema:
+            type: integer
+        - name: scrollToken
+          in: query
+          description: Token for requested page
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hits:
+                    type: integer
+                    example: 1
+                  scrollToken:
+                    type: string
+                    description: Pagination token
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+        '400':
+          description: Some of the arguments were invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiError'
+                  uid:
+                    type: string
+                    description: UID for debug purposes
+  '/customers/{customerId}':
+    get:
+      tags:
+        - Customer
+      summary: Get detail of the customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdInPath'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/customers/{customerId}/notes':
+    get:
+      tags:
+        - Customer
+      summary: Get list of customer notes
+      parameters:
+        - name: customerId
+          in: path
+          description: Id of the customer
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRecords:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerNote'
+                  _links:
+                    $ref: '#/components/schemas/Links'
+        '400':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    post:
+      tags:
+        - Customer
+      summary: Create customer note
+      parameters:
+        - name: customerId
+          in: path
+          description: ID of the customer
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  description: Text content of the customer note
+      responses:
+        '201':
+          description: Customer note has been added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerNote'
+        '400':
+          description: Customer note hasn't been added due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/customers/{customerId}/notes/{noteId}':
+    put:
+      tags:
+        - Customer
+      summary: Update customer note
+      parameters:
+        - name: customerId
+          in: path
+          description: ID of the customer
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          description: ID of the customer note
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer note has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerNote'
+        '404':
+          description: Customer note was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Customer
+      summary: Delete customer note
+      parameters:
+        - name: customerId
+          in: path
+          description: ID of the customer
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          description: ID of the customer note
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Customer note has been deleted
+        '404':
+          description: Customer note was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /customers/custom-field-definitions:
+    get:
+      tags:
+        - Customer
+      summary: Get definition of Customer's Custom Fields
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerCustomFieldDefinition'
+    put:
+      tags:
+        - Customer
+      summary: Create or update Customer Custom Field (based on ident)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCustomFieldDefinition'
+      responses:
+        '201':
+          description: Created
+        '204':
+          description: Updated
+        '404':
+          description: Custom fields were not created or updated due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/customers/{customerId}/custom-fields':
+    put:
+      tags:
+        - Customer
+      summary: Update values of customer custom fields
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdInPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomField'
+      responses:
+        '200':
+          description: Custom fields' values were updated
+        '400':
+          description: Custom fields values were not updated due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/customers/{customerId}/custom-fields/{customFieldIdentifier}':
+    delete:
+      tags:
+        - Customer
+      summary: Remove custom field value from Customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdInPath'
+        - $ref: '#/components/parameters/CustomFieldIdentifierInPath'
+      responses:
+        '204':
+          description: Custom field value was removed from Customer
+        '400':
+          description: Custom field value in Customer cannot be removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Customer or Custom field value in Customer was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Custom field value was not removed from Contact due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/author-name-removal':
+    post:
+      tags:
+        - Message
+      summary: Remove author name from message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetContentRemoved'
+      responses:
+        '201':
+          description: Author name successfully removed from message
+        '400':
+          description: Author name not removed from message due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '403':
+          description: Author name not removed from message due to missing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/tags/{tagId}':
+    put:
+      tags:
+        - Message
+      summary: Add tag to message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: tagId
+          in: path
+          description: ID of the tag
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tag successfully added to message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Tag not added to message due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Message
+      summary: Remove tag from message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: tagId
+          in: path
+          description: ID of the tag
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tag successfully removed from message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Tag not removed from message due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/content-removal':
+    post:
+      tags:
+        - Message
+      summary: Remove content of a message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of a message
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetContentRemoved'
+      responses:
+        '201':
+          description: Message's content successfully removed from message
+        '400':
+          description: Message's content not removed from message due to an error - content already removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '403':
+          description: Message's content not removed from message due to missing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Message's content not removed from message due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/hide':
+    post:
+      tags:
+        - Message
+      summary: Hide message on external platform and adjust flags in DFO platform to mark the message as hidden
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of a message
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Message successfully removed
+        '400':
+          description: Message was not removed due an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '403':
+          description: Message was not removed due to missing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not removed - Message or Contact were not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Message was not removed due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Message
+      summary: Un-hide message on external platform and adjust flags in DFO platform to mark the message as not hidden
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of a message
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Message successfully un-hidden
+        '400':
+          description: Message was not un-hidden due an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '403':
+          description: Message was not un-hidden due to missing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not un-hidden - Message or Contact were not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Message was not un-hidden due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/delete':
+    post:
+      tags:
+        - Message
+      summary: This request deletes message on external platform and also adjusts flags in DFO platform to mark that this message is deleted
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of a message
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Message successfully hidden
+        '400':
+          description: Message was not hidden - an error occured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '403':
+          description: Message was not hidden - missing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not hidden - message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Document saving version conflict ocurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/notes':
+    post:
+      tags:
+        - Message
+      summary: Create new note to message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: This is content of this note.
+                  description: Content of the note
+      responses:
+        '201':
+          description: Note was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageNote'
+        '404':
+          description: Message was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Document saving version conflict ocurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/notes/{noteId}':
+    put:
+      tags:
+        - Message
+      summary: Update note of the message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          description: ID of the note
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: This is content of this note.
+                  description: New content of the note
+              required:
+                - content
+      responses:
+        '200':
+          description: Note successfully updated within the message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageNote'
+        '400':
+          description: Note was not updated due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message or note was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Message
+      summary: Remove note from message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          description: ID of the note
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Note successfully removed from message
+        '404':
+          description: Note not removed from message - either message or note for the message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Note not removed from message due to a version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/read':
+    put:
+      tags:
+        - Message
+      summary: Set read status of a message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isRead
+              properties:
+                isRead:
+                  type: boolean
+      responses:
+        '200':
+          description: Read status of message successfully set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Read status was not set due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Message's is read status was not changed due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/sentiment':
+    put:
+      tags:
+        - Message
+      summary: Set sentiment of a message
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sentiment
+              properties:
+                sentiment:
+                  $ref: '#/components/schemas/Sentiment'
+      responses:
+        '200':
+          description: Sentiment of message successfully set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '404':
+          description: Message was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Message's sentiment was not changed due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/messages/{messageId}/react/{reactionType}':
+    post:
+      tags:
+        - Message
+      summary: Add reaction to a message in channel
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: reactionType
+          in: path
+          description: Type of the reaction
+          required: true
+          schema:
+            type: string
+            enum:
+              - like
+              - share
+      responses:
+        '204':
+          description: Reaction was added to message
+        '400':
+          description: Reaction was not added due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Reaction was not added due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Message
+      summary: Delete reaction from a message in channel
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of the message
+          required: true
+          schema:
+            type: string
+        - name: reactionType
+          in: path
+          description: Type of the reaction
+          required: true
+          schema:
+            type: string
+            enum:
+              - like
+      responses:
+        '204':
+          description: Reaction was deleted from message
+        '400':
+          description: Reaction was not deleted due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Message was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Reaction was not deleted due to version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /attachments/temporary:
+    post:
+      tags:
+        - Attachment
+      summary: Upload base64 encoded file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+                - mimeType
+              properties:
+                content:
+                  type: string
+                  description: Base 64 encoded content of uploaded file (size limit is 40MB)
+                mimeType:
+                  type: string
+                  description: MIME type of uploaded file
+                  pattern: '^\w+/[-+.\w]+$'
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: ID of temporary attachment
+                  url:
+                    type: string
+                    format: uri
+                  expireAt:
+                    type: string
+                    format: date-time
+                    example: '2020-10-02T15:55:00+02:00'
+        '400':
+          description: Something went wrong
+  /routing-queues:
+    get:
+      tags:
+        - Routing queue
+      summary: Get list of routing queues based on filter
+      parameters:
+        - name: 'id[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Ids of Routing Queues
+          examples:
+            oneId:
+              summary: Example of a single ID
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+            multipleIds:
+              summary: Example of multiple IDs
+              value:
+                - 681ce3ab-0ef3-4d45-a4c6-dedeec8901ff
+                - 201ce3ab-0ef3-4d45-a4c6-dedeec8901ee
+          required: false
+        - name: nameContains
+          in: query
+          schema:
+            type: string
+          description: Filter by part of name of a routing queue
+          required: false
+        - name: withDeleted
+          in: query
+          schema:
+            type: boolean
+            default: false
+          required: false
+        - name: size
+          in: query
+          description: Maximum count of returned entities
+          required: false
+          schema:
+            type: integer
+        - name: isAssignableByMe
+          in: query
+          description: Filters routing queues that can be assigned by logged agent
+          required: false
+          schema:
+            type: boolean
+        - name: isAssignableByUser
+          in: query
+          description: Filters routing queues that can be assigned by set user
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hits:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoutingQueue'
+        '400':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiError'
+                  uid:
+                    type: string
+                    description: UID for debug purposes
+  /one-time-token/authentication:
+    get:
+      tags:
+        - One time verification token
+      summary: Authenticate redirect URL for one-time token
+      parameters:
+        - name: redirectUrl
+          in: query
+          schema:
+            type: string
+            minLength: 1
+          required: true
+        - name: state
+          in: query
+          schema:
+            type: string
+            minLength: 1
+          required: true
+      responses:
+        '302':
+          description: In "location" header contains redirect URL with token
+        '401':
+          description: Access denied
+  /one-time-token/verification:
+    post:
+      tags:
+        - One time verification token
+      summary: Verify one-time token and get JWT authentication token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - brandId
+                - userId
+                - token
+                - purpose
+              properties:
+                brandId:
+                  type: integer
+                  description: ID of a Brand in DFO
+                userId:
+                  type: integer
+                  description: ID of a User in DFO existing in given Brand
+                token:
+                  type: string
+                  description: Valid unused one-time token
+                purpose:
+                  type: string
+                  enum:
+                    - login
+                    - channel-integration
+                    - custom-component-login
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - brand
+                  - user
+                  - accessToken
+                properties:
+                  brand:
+                    $ref: '#/components/schemas/Brand'
+                  user:
+                    $ref: '#/components/schemas/User'
+                  accessToken:
+                    type: string
+        '400':
+          description: 'Invalid data - nonexistent Brand/User, invalid token, unknown purpose'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /quick-responses:
+    get:
+      tags:
+        - Quick response
+      summary: Get list of quick responses
+      parameters:
+        - name: 'channelId[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Ids of channels
+          examples:
+            oneId:
+              summary: Example of a single Id
+              value:
+                - chat_1234
+            multipleIds:
+              summary: Example of multiple Ids
+              value:
+                - chat_1234
+                - ind_23
+                - channel_456
+          required: false
+        - name: 'excludeType[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Types of quick responses
+          examples:
+            oneId:
+              summary: Example of a single type
+              value:
+                - dynamicContent
+            multipleIds:
+              summary: Example of multiple types
+              value:
+                - dynamicContent
+                - htmlText
+          required: false
+        - name: contactNumber
+          in: query
+          schema:
+            type: string
+          description: Contact id
+          required: false
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRecords:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuickResponse'
+                  _links:
+                    $ref: '#/components/schemas/Links'
+        '400':
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/quick-responses/{quickResponseId}/replace-variables':
+    post:
+      tags:
+        - Quick response
+      summary: Replace variables in quick response
+      parameters:
+        - name: quickResponseId
+          in: path
+          description: ID of the quick response
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: object
+                  properties:
+                    contactNumber:
+                      type: string
+                  required:
+                    - contactNumber
+                externalVariables:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - name
+                      - value
+      responses:
+        '200':
+          description: Quick response has replaced variables
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+        '400':
+          description: Quick response hasn't been replaced due to an error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Quick response was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  /users:
+    get:
+      tags:
+        - User
+      summary: Get list of users based on a filter
+      parameters:
+        - name: username
+          in: query
+          schema:
+            type: string
+          description: Filter for one specific username
+          required: false
+        - name: fullNameContains
+          in: query
+          schema:
+            type: string
+          description: Filter by part of a user's first or last name
+          required: false
+        - name: userHubId
+          in: query
+          schema:
+            type: string
+          description: Filter for a user with a given UserHub Id
+          required: false
+        - name: size
+          in: query
+          description: Maximum count of returned entities
+          required: false
+          schema:
+            type: integer
+        - name: isAssignableByMe
+          in: query
+          description: Filters users that can be assigned by logged agent
+          required: false
+          schema:
+            type: boolean
+        - name: isAssignableByUser
+          in: query
+          description: Filters users that can be assigned by set user
+          required: false
+          schema:
+            type: integer
+        - name: withApprovePermissionOnChannelId
+          in: query
+          description: Filters users that have approval permissions for a given channel id
+          required: false
+          schema:
+            type: string
+        - name: includeStatus
+          in: query
+          description: Defines if the the response should include the current status of the users
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Some of the arguments were invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiError'
+                  uid:
+                    type: string
+                    description: UID for debug purposes
+  /threads:
+    get:
+      tags:
+        - Thread
+      summary: Get list of threads based on a filter
+      parameters:
+        - name: withContext
+          in: query
+          schema:
+            type: integer
+          description: Adds channel data and first message of the thread to response
+          required: false
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Thread Query search
+          examples:
+            notEqualSingle:
+              summary: Field not equal to single value
+              value: channelId!=channel_1
+            multipleValuesSearch:
+              summary: Use multiple search values for field
+              value: 'channelId IN (channel_1, channel_2)'
+          required: false
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRecords:
+                    type: integer
+                    example: 1
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThreadToCreate'
+                  _links:
+                    $ref: '#/components/schemas/Links'
+                  _context:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MessageDetail'
+                      channels:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Channel'
+        '400':
+          description: Some of the arguments were invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiError'
+                  uid:
+                    type: string
+                    description: UID for debug purposes
+  '/visitors/{visitorId}/tags':
+    put:
+      tags:
+        - Visitor tags
+      summary: Add tags to visitor
+      parameters:
+        - name: visitorId
+          in: path
+          description: ID of visitor
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tagIds:
+                  type: array
+                  items:
+                    type: integer
+                  default: []
+      responses:
+        '200':
+          description: Tags were added
+        '400':
+          description: Tag does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '404':
+          description: Visitor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Visitor saving version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+    delete:
+      tags:
+        - Visitor tags
+      summary: Remove tags from visitor
+      parameters:
+        - name: visitorId
+          in: path
+          description: ID of visitor
+          required: true
+          schema:
+            type: string
+        - name: 'tagIds[]'
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Ids of tags
+          examples:
+            oneTagId:
+              summary: Example of a single tagId
+              value:
+                - 1
+            multipleTagIds:
+              summary: Example of multiple tagIds
+              value:
+                - 1
+                - 2
+                - 3
+          required: false
+      responses:
+        '204':
+          description: Tags were removed
+        '404':
+          description: Visitor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+        '409':
+          description: Visitor saving version conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+  '/visitors/{visitorId}/events':
+    post:
+      tags:
+        - Visitor event
+      summary: Create visitor event
+      parameters:
+        - name: visitorId
+          in: path
+          description: ID of visitor
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                destination:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                createdAtWithMilliseconds:
+                  type: string
+                  format: date-time
+                  example: '2020-12-12T10:12:13.987+05:00'
+                visitId:
+                  type: string
+                context:
+                  type: object
+                  properties:
+                    channel:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Channel id
+                data:
+                  type: object
+                  example:
+                    url: example.com
+                    title: Example title
+      responses:
+        '201':
+          description: Visitor event created
+        '400':
+          description: Visitor event was not created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCollection'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    ChannelIdInPath:
+      name: channelId
+      in: path
+      description: ID of the channel
+      required: true
+      schema:
+        type: string
+    CustomerIdInPath:
+      name: customerId
+      in: path
+      description: ID of the Customer
+      required: true
+      schema:
+        type: string
+    ContactNumberInPath:
+      name: contactNumber
+      in: path
+      description: Number of the Contact (contact ID will be supported in the future)
+      required: true
+      schema:
+        type: string
+    MessageDraftId:
+      name: messageDraftId
+      in: path
+      description: Id of the message draft
+      required: true
+      schema:
+        type: string
+    CustomFieldIdentifierInPath:
+      name: customFieldIdentifier
+      in: path
+      description: Custom field identifier
+      required: true
+      schema:
+        type: string
+  schemas:
+    ApiError:
+      title: API error
+      type: object
+      required:
+        - field
+        - message
+        - parameters
+      properties:
+        field:
+          type: string
+          description: Name of the field containing error
+        message:
+          type: string
+          description: Error description
+        parameters:
+          type: object
+          description: Free dictionary of additional data describing the error state
+        errorCode:
+          type: string
+          description: Specific code of the type of error
+    ApiErrorCollection:
+      title: Collection of API errors
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiError'
+        uid:
+          type: string
+          description: UID for debug purposes
+      required:
+        - errors
+    Pagination:
+      type: object
+      properties:
+        previous:
+          type: string
+          description: Identifier of the previous item
+        next:
+          type: string
+          description: Identifier of the following item
+    Brand:
+      title: Brand definition
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        friendlyName:
+          type: string
+        timezone:
+          type: string
+        brandHash:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+          nullable: true
+        businessUnitId:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - friendlyName
+        - timezone
+        - brandHash
+    NewChannel:
+      title: Create Channel
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^\S+$
+          minLength: 1
+          maxLength: 128
+        idOnExternalPlatform:
+          type: string
+          minLength: 1
+          description: 'Identifier of external platform, e.g. twitter account id'
+        channelIntegrationId:
+          type: string
+          format: uuid
+        realExternalPlatformId:
+          type: string
+          enum:
+            - apple-apps-reviews
+            - apple-business-chat
+            - bg
+            - bw
+            - chat
+            - congstar-forum
+            - custom
+            - cypress
+            - discussions
+            - email
+            - facebook
+            - fb
+            - fm
+            - forum
+            - gcse
+            - gl
+            - google-business-messages
+            - google-places
+            - google-play
+            - google-rcs
+            - gp
+            - ig
+            - in-contact-email
+            - ind
+            - instagram
+            - kik
+            - lc
+            - li
+            - line
+            - mediatoolkit
+            - microsoft-teams
+            - mock
+            - monitora
+            - news
+            - nw
+            - ok-ru
+            - phpbb
+            - rss
+            - sandbox
+            - sandbox-facebook
+            - sandbox-twitter
+            - sendbird
+            - slack
+            - smooch-io-we-chat
+            - sms
+            - social-watch
+            - t-mobile-austria-forum
+            - talkdesk
+            - telegram
+            - tmobile-forum
+            - tw
+            - twitter
+            - viber
+            - vk
+            - vo
+            - voice
+            - we-chat
+            - whatsapp
+            - youscan
+            - yt
+            - zoom
+          description: 'Identifier of external platform. This identifier has no impact on business logic and is for read only purposes, e.g. when grouping channels by 3rd party providers for displaying them.'
+        name:
+          type: string
+          minLength: 1
+          description: Channel name e.g. My Twitter Page
+        isPrivate:
+          type: boolean
+        hasTreeStructure:
+          type: boolean
+        hasReply:
+          type: boolean
+          description: Channel is able to send reply and whether reply box will be displayed to agent in the Agent Console.
+          default: true
+        contentFormat:
+          type: string
+          enum:
+            - html
+            - plain
+          description: 'Format of content, Security warning: if you set html, content in html format would not be escaped'
+        hasAbilityToSendFiles:
+          type: boolean
+          description: Channel is able to process attachments in reply requests. Also if this is set to TRUE it will show ability to send file to the agent in the Agent Console.
+          default: false
+        hasOutboundFlow:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        translationGroup:
+          type: string
+          enum:
+            - default
+            - email
+            - phone
+          description: Translation group for platform specific naming
+        externalPlatformAvatar:
+          type: string
+          description: URL to channel avatar (make sure url will not expire and is accessible over the internet for users)
+          default: ''
+        externalPlatformIcon:
+          type: string
+          enum:
+            - amazon
+            - apple
+            - apple-apps
+            - apple-imessage
+            - co-browsing
+            - contact-form
+            - email
+            - facebook
+            - facebook-dm
+            - facebook-messenger
+            - forum
+            - google
+            - google-dm
+            - google-maps
+            - google-play
+            - google-search
+            - instagram
+            - instagram-dm
+            - kakao-talk
+            - kik
+            - line-message
+            - linkedin
+            - listening
+            - livechat
+            - livechat-contact-form
+            - ok-ru
+            - pinterest
+            - rcs
+            - rss
+            - slack
+            - sms
+            - snapchat
+            - tango
+            - telegram
+            - tumblr
+            - twitter
+            - twitter-dm
+            - viber
+            - vkontakte
+            - vkontakte-dm
+            - voice
+            - wechat
+            - whatsapp
+            - youtube
+          description: Channel icon identifier
+        ownerUserId:
+          type: integer
+          description: Define owner of the channel (user who will be notified if channel errors occurred). UserId is DFO User ID.
+          default: 0
+        hasAbilityToLike:
+          type: boolean
+          description: Channel is able to send like message actions
+          default: false
+        hasAbilityToShare:
+          type: boolean
+          default: false
+          'x-description:': Channel is able to send share message actions
+        hasAbilityToDelete:
+          type: boolean
+          description: Channel is able to delete message
+          default: false
+        hasAbilityToTag:
+          type: boolean
+          description: Channel is able to send tag message actions
+          default: false
+        hasAbilityToChangeFrom:
+          type: boolean
+          description: Channel is able to change sender of reply
+          default: false
+        wysiwygEnabled:
+          type: boolean
+          description: Wysiwyg is used for reply box in the Agent Console. Also the content type HTML needs to be used at that point.
+          default: false
+        isAutomaticSignatureAttached:
+          type: boolean
+          description: Agent defined signature is automatically attached to outbound messages
+          default: false
+        isCaseBasedStorage:
+          type: boolean
+        hasOutboundTemplates:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        hasManualOutboundFlow:
+          type: boolean
+          description: 'Agent can send outbound from Agent Console, meaning to start manually completely new conversation without previous conversation with Customer'
+          default: false
+        studioScript:
+          type: string
+        hasPublishing:
+          type: boolean
+        hasMultipleRecipient:
+          type: boolean
+          description: Threads can have multiple recipients in single Contact
+          default: false
+        hasCcAndBcc:
+          type: boolean
+          description: Channel supports CCs and BCCs (e-mails only)
+          default: false
+        hasVisibleTitle:
+          type: boolean
+          description: Thread title is visible in Agent Console
+          default: false
+        hasEditableTitle:
+          type: boolean
+          description: Agent can manually change thread title
+          default: false
+        hasVisibleRecipients:
+          type: boolean
+          description: Agent can see recipients in reply box
+          default: false
+        hasAbilityToForwardMessage:
+          type: boolean
+          description: Agent can forward message from Agent Console
+          default: false
+        hasAbilityToChangeRecipient:
+          type: boolean
+          description: Agent can change recipients in reply box
+          default: false
+        hasMultipleThreadsPerEndUser:
+          type: boolean
+          description: Channel supports multi thread for single Customer
+          default: false
+        hasPostAsPlaceholder:
+          type: boolean
+        canAgentInviteCustomersToContact:
+          type: boolean
+        canReplyToAnyMessage:
+          type: boolean
+      required:
+        - id
+        - idOnExternalPlatform
+        - channelIntegrationId
+        - realExternalPlatformId
+        - name
+        - isPrivate
+        - hasTreeStructure
+    Channel:
+      title: Channel
+      type: object
+      required:
+        - id
+        - name
+        - channelIntegrationId
+        - realExternalPlatformId
+        - idOnExternalPlatform
+        - isPrivate
+        - hasTreeStructure
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Unique ID of channel
+        idOnExternalPlatform:
+          type: string
+          minLength: 1
+          description: 'Identifier of external platform, e.g. twitter account id'
+        name:
+          type: string
+          minLength: 1
+          description: Channel name e.g. My Twitter Page
+        channelIntegrationId:
+          type: string
+          format: uuid
+        integrationBoxIdentifier:
+          type: string
+          minLength: 1
+        realExternalPlatformId:
+          type: string
+          enum:
+            - apple-apps-reviews
+            - apple-business-chat
+            - bg
+            - bw
+            - chat
+            - congstar-forum
+            - custom
+            - cypress
+            - discussions
+            - email
+            - facebook
+            - fb
+            - fm
+            - forum
+            - gcse
+            - gl
+            - google-business-messages
+            - google-places
+            - google-play
+            - google-rcs
+            - gp
+            - ig
+            - in-contact-email
+            - ind
+            - instagram
+            - kik
+            - lc
+            - li
+            - line
+            - mediatoolkit
+            - microsoft-teams
+            - mock
+            - monitora
+            - news
+            - nw
+            - ok-ru
+            - phpbb
+            - rss
+            - sandbox
+            - sandbox-facebook
+            - sandbox-twitter
+            - sendbird
+            - slack
+            - smooch-io-we-chat
+            - sms
+            - social-watch
+            - t-mobile-austria-forum
+            - talkdesk
+            - telegram
+            - tmobile-forum
+            - tw
+            - twitter
+            - viber
+            - vk
+            - vo
+            - voice
+            - we-chat
+            - whatsapp
+            - youscan
+            - yt
+            - zoom
+          description: 'Identifier of external platform. This identifier has no impact on business logic and is for read only purposes, e.g. when grouping channels by 3rd party providers for displaying them.'
+        externalPlatformAvatar:
+          type: string
+          description: URL to channel avatar (make sure url will not expire and is accessible over the internet for users)
+          default: ''
+        externalPlatformIcon:
+          type: string
+          enum:
+            - amazon
+            - apple
+            - apple-apps
+            - apple-imessage
+            - co-browsing
+            - contact-form
+            - email
+            - facebook
+            - facebook-dm
+            - facebook-messenger
+            - forum
+            - google
+            - google-dm
+            - google-maps
+            - google-play
+            - google-search
+            - instagram
+            - instagram-dm
+            - kakao-talk
+            - kik
+            - line-message
+            - linkedin
+            - listening
+            - livechat
+            - livechat-contact-form
+            - ok-ru
+            - pinterest
+            - rcs
+            - rss
+            - slack
+            - sms
+            - snapchat
+            - tango
+            - telegram
+            - tumblr
+            - twitter
+            - twitter-dm
+            - viber
+            - vkontakte
+            - vkontakte-dm
+            - voice
+            - wechat
+            - whatsapp
+            - youtube
+          description: Channel icon identifier
+        isPrivate:
+          type: boolean
+        hasTreeStructure:
+          type: boolean
+        isDeleted:
+          type: boolean
+          default: false
+        isHidden:
+          type: boolean
+          default: false
+        contentFormat:
+          type: string
+          enum:
+            - html
+            - plain
+          description: 'Format of content, Security warning: if you set html, content in html format would not be escaped'
+          default: plain
+        hasReply:
+          type: boolean
+          description: Channel is able to send reply and whether reply box will be displayed to agent in the Agent Console.
+          default: true
+        replyPrefixMentionTemplate:
+          type: string
+          default: ''
+        nicknameOnExternalPlatform:
+          type: string
+          default: ''
+        hasCustomerOnThirdParty:
+          type: boolean
+          description: Agent can have their own identity on external platform?
+          default: false
+        hasAbilityToSendFiles:
+          type: boolean
+          description: Channel is able to process attachments in reply requests. Also if this is set to TRUE it will show ability to send file to the agent in the Agent Console.
+          default: false
+        hasOutboundFlow:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        hasOutboundTemplates:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        translationGroup:
+          type: string
+          enum:
+            - default
+            - email
+            - phone
+          description: Translation group for platform specific naming
+        ownerUserId:
+          type: integer
+          description: Define owner of the channel (user who will be notified if channel errors occurred). UserId is DFO User ID.
+          default: 0
+        isLiveChat:
+          type: boolean
+          default: false
+          'x-description:': Channel is considered as live chat
+        canSaveResponse:
+          type: boolean
+          default: false
+          'x-description:': Agent can save response in reply box
+        hasAbilityToShare:
+          type: boolean
+          default: false
+          'x-description:': Channel is able to send share message actions
+        hasAbilityToLike:
+          type: boolean
+          description: Channel is able to send like message actions
+          default: false
+        hasAbilityToTag:
+          type: boolean
+          description: Channel is able to send tag message actions
+          default: false
+        hasAbilityToHide:
+          type: boolean
+          description: Channel is able to hide message
+          default: false
+        hasAbilityToDelete:
+          type: boolean
+          description: Channel is able to delete message
+          default: false
+        hasAbilityToQuoteMessage:
+          type: boolean
+          description: Channel is able to quote message
+          default: false
+        hasAbilityToChangeFrom:
+          type: boolean
+          description: Channel is able to change sender of reply
+          default: false
+        wysiwygEnabled:
+          type: boolean
+          description: Wysiwyg is used for reply box in the Agent Console. Also the content type HTML needs to be used at that point.
+          default: false
+        hasAbilityToChangeRecipient:
+          type: boolean
+          description: Agent can change recipients in reply box
+          default: false
+        hasMultipleRecipient:
+          type: boolean
+          description: Threads can have multiple recipients in single Contact
+          default: false
+        hasMultipleThreadsPerEndUser:
+          type: boolean
+          description: Channel supports multi thread for single Customer
+          default: false
+        hasCcAndBcc:
+          type: boolean
+          description: Channel supports CCs and BCCs (e-mails only)
+          default: false
+        hasVisibleTitle:
+          type: boolean
+          description: Thread title is visible in Agent Console
+          default: false
+        hasEditableTitle:
+          type: boolean
+          description: Agent can manually change thread title
+          default: false
+        hasVisibleRecipients:
+          type: boolean
+          description: Agent can see recipients in reply box
+          default: false
+        hasAbilityToForwardMessage:
+          type: boolean
+          description: Agent can forward message from Agent Console
+          default: false
+        canAgentInviteCustomersToContact:
+          type: boolean
+          default: false
+        canReplyToAnyMessage:
+          type: boolean
+          default: false
+        isAutomaticSignatureAttached:
+          type: boolean
+          description: Agent defined signature is automatically attached to outbound messages
+          default: false
+        isPostWritable:
+          type: boolean
+          default: false
+        hasPublishing:
+          type: boolean
+          default: false
+        studioScript:
+          type: string
+          minLength: 1
+        mediaType:
+          type: integer
+          minimum: 1
+    ChannelV2:
+      title: Channel
+      type: object
+      required:
+        - id
+        - name
+        - channelIntegrationId
+        - realExternalPlatformId
+        - idOnExternalPlatform
+        - isPrivate
+        - hasTreeStructure
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Unique ID of channel
+        idOnExternalPlatform:
+          type: string
+          minLength: 1
+          description: 'Identifier of external platform, e.g. twitter account id'
+        realExternalPlatformId:
+          type: string
+          enum:
+            - apple-apps-reviews
+            - apple-business-chat
+            - bg
+            - bw
+            - chat
+            - congstar-forum
+            - custom
+            - cypress
+            - discussions
+            - email
+            - facebook
+            - fb
+            - fm
+            - forum
+            - gcse
+            - gl
+            - google-business-messages
+            - google-places
+            - google-play
+            - google-rcs
+            - gp
+            - ig
+            - in-contact-email
+            - ind
+            - instagram
+            - kik
+            - lc
+            - li
+            - line
+            - mediatoolkit
+            - microsoft-teams
+            - mock
+            - monitora
+            - news
+            - nw
+            - ok-ru
+            - phpbb
+            - rss
+            - sandbox
+            - sandbox-facebook
+            - sandbox-twitter
+            - sendbird
+            - slack
+            - smooch-io-we-chat
+            - sms
+            - social-watch
+            - t-mobile-austria-forum
+            - talkdesk
+            - telegram
+            - tmobile-forum
+            - tw
+            - twitter
+            - viber
+            - vk
+            - vo
+            - voice
+            - we-chat
+            - whatsapp
+            - youscan
+            - yt
+            - zoom
+          description: 'Identifier of external platform. This identifier has no impact on business logic and is for read only purposes, e.g. when grouping channels by 3rd party providers for displaying them.'
+        name:
+          type: string
+          minLength: 1
+          description: Channel name e.g. My Twitter Page
+        externalPlatformAvatar:
+          type: string
+          description: URL to channel avatar (make sure url will not expire and is accessible over the internet for users)
+          default: ''
+        externalPlatformIcon:
+          type: string
+          enum:
+            - amazon
+            - apple
+            - apple-apps
+            - apple-imessage
+            - co-browsing
+            - contact-form
+            - email
+            - facebook
+            - facebook-dm
+            - facebook-messenger
+            - forum
+            - google
+            - google-dm
+            - google-maps
+            - google-play
+            - google-search
+            - instagram
+            - instagram-dm
+            - kakao-talk
+            - kik
+            - line-message
+            - linkedin
+            - listening
+            - livechat
+            - livechat-contact-form
+            - ok-ru
+            - pinterest
+            - rcs
+            - rss
+            - slack
+            - sms
+            - snapchat
+            - tango
+            - telegram
+            - tumblr
+            - twitter
+            - twitter-dm
+            - viber
+            - vkontakte
+            - vkontakte-dm
+            - voice
+            - wechat
+            - whatsapp
+            - youtube
+          description: Channel icon identifier
+        channelIntegrationId:
+          type: string
+          format: uuid
+        hasReply:
+          type: boolean
+          description: Channel is able to send reply and whether reply box will be displayed to agent in the Agent Console.
+          default: true
+        hasTreeStructure:
+          type: boolean
+        contentFormat:
+          type: string
+          enum:
+            - html
+            - plain
+          description: 'Format of content, Security warning: if you set html, content in html format would not be escaped'
+          default: plain
+        hasCustomerOnThirdParty:
+          type: boolean
+          description: Agent can have their own identity on external platform?
+          default: false
+        isPostWritable:
+          type: boolean
+        hasAbilityToQuoteMessage:
+          type: boolean
+          description: Channel is able to quote message
+          default: false
+        hasAbilityToLike:
+          type: boolean
+          description: Channel is able to send like message actions
+          default: false
+        isPrivate:
+          type: boolean
+        isHidden:
+          type: boolean
+          default: false
+        wysiwygEnabled:
+          type: boolean
+          description: Wysiwyg is used for reply box in the Agent Console. Also the content type HTML needs to be used at that point.
+          default: false
+        hasAbilityToTag:
+          type: boolean
+          description: Channel is able to send tag message actions
+          default: false
+        ownerUserId:
+          type: integer
+          description: Define owner of the channel (user who will be notified if channel errors occurred). UserId is DFO User ID.
+          default: 0
+        hasPublishing:
+          type: boolean
+          default: false
+        hasAbilityToSendFiles:
+          type: boolean
+          description: Channel is able to process attachments in reply requests. Also if this is set to TRUE it will show ability to send file to the agent in the Agent Console.
+          default: false
+        hasOutboundFlow:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        hasAbilityToShare:
+          type: boolean
+          default: false
+          'x-description:': Channel is able to send share message actions
+        hasAbilityToHide:
+          type: boolean
+          description: Channel is able to hide message
+          default: false
+        hasAbilityToDelete:
+          type: boolean
+          description: Channel is able to delete message
+          default: false
+        replyPrefixMentionTemplate:
+          type: string
+          default: ''
+        nicknameOnExternalPlatform:
+          type: string
+          default: ''
+        isLiveChat:
+          type: boolean
+          default: false
+          'x-description:': Channel is considered as live chat
+        hasAbilityToChangeRecipient:
+          type: boolean
+          description: Agent can change recipients in reply box
+          default: false
+        hasMultipleRecipient:
+          type: boolean
+          description: Threads can have multiple recipients in single Contact
+          default: false
+        hasCcAndBcc:
+          type: boolean
+          description: Channel supports CCs and BCCs (e-mails only)
+          default: false
+        hasVisibleTitle:
+          type: boolean
+          description: Thread title is visible in Agent Console
+          default: false
+        hasEditableTitle:
+          type: boolean
+          description: Agent can manually change thread title
+          default: false
+        hasVisibleRecipients:
+          type: boolean
+          description: Agent can see recipients in reply box
+          default: false
+        hasAbilityToForwardMessage:
+          type: boolean
+          description: Agent can forward message from Agent Console
+          default: false
+        canSaveResponse:
+          type: boolean
+          default: false
+          'x-description:': Agent can save response in reply box
+        hasAbilityToChangeFrom:
+          type: boolean
+          description: Channel is able to change sender of reply
+          default: false
+        isAutomaticSignatureAttached:
+          type: boolean
+          description: Agent defined signature is automatically attached to outbound messages
+          default: false
+        hasOutboundTemplates:
+          type: boolean
+          description: 'Channel is able to do outbounds (using the API), meaning to start manually completely new conversation without previous conversation with Customer.'
+          default: false
+        hasManualOutboundFlow:
+          type: boolean
+          description: 'Agent can send outbound from Agent Console, meaning to start manually completely new conversation without previous conversation with Customer'
+          default: false
+        hasMultipleThreadsPerEndUser:
+          type: boolean
+          description: Channel supports multi thread for single Customer
+          default: false
+        translationGroup:
+          type: string
+          enum:
+            - default
+            - email
+            - phone
+          description: Translation group for platform specific naming
+        studioScript:
+          type: string
+          minLength: 1
+        canAgentInviteCustomersToContact:
+          type: boolean
+          default: false
+        canReplyToAnyMessage:
+          type: boolean
+          default: false
+    ExternalPlatformTemplate:
+      title: External platform templates
+      type: object
+      properties:
+        template:
+          type: string
+        category:
+          type: string
+          enum:
+            - TRANSACTIONAL
+            - MARKETING
+        messageContent:
+          title: External platform templates message content
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - PLUGIN
+            payload:
+              title: External platform templates payload
+              type: object
+              properties:
+                elements:
+                  type: array
+                  items:
+                    title: External platform templates element
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      text:
+                        type: string
+                      type:
+                        type: string
+                        enum:
+                          - TEXT_TEMPLATE
+                      template:
+                        type: string
+                        minLength: 1
+                      variables:
+                        type: array
+                        items: {}
+                    required:
+                      - id
+                      - text
+                      - type
+                      - template
+                  minItems: 1
+              required:
+                - elements
+          required:
+            - type
+            - payload
+      required:
+        - template
+        - category
+        - messageContent
+    User:
+      type: object
+      required:
+        - id
+        - emailAddress
+        - loginUsername
+        - firstName
+        - surname
+        - isBotUser
+        - isSurveyUser
+        - userType
+      properties:
+        id:
+          type: integer
+          description: ID of the User (platform specific)
+          example: 21543
+        incontactId:
+          type: string
+          description: ID of the User in CXone
+          example: b6925157-5e0e-4c11-8e9b-56a4078abb25
+        emailAddress:
+          type: string
+          example: agent@cxone.com
+        loginUsername:
+          type: string
+          description: 'Login username, typically an e-mail address'
+          example: agent@cxone.com
+        userType:
+          type: string
+          enum:
+            - user
+            - superuser
+        firstName:
+          type: string
+          example: John
+        surname:
+          type: string
+          example: Haste
+        nickname:
+          type: string
+        imageUrl:
+          type: string
+          description: Path to user's avatar image
+        isBotUser:
+          type: boolean
+          default: false
+        isSurveyUser:
+          type: boolean
+          default: false
+    ContactInformation:
+      title: Additional Contact information
+      type: object
+      properties:
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldToCreate'
+        elevation:
+          $ref: '#/components/schemas/Elevation'
+        status:
+          type: string
+          enum:
+            - escalated
+            - pending
+            - resolved
+    Elevation:
+      title: Contact elevation
+      type: object
+      properties:
+        contact:
+          type: object
+          properties:
+            contactId:
+              type: string
+              format: uuid
+          required:
+            - contactId
+        agentContact:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+          required:
+            - id
+        interaction:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+          required:
+            - id
+        fromProvider:
+          type: string
+          enum:
+            - acd
+            - dfo
+            - em
+      required:
+        - interaction
+    MessageMinimum:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: 3260aca1-e1c1-403e-a2ba-72bf4251a1cb
+    NewMessage:
+      type: object
+      required:
+        - idOnExternalPlatform
+        - thread
+        - messageContent
+        - createdAtWithMilliseconds
+        - authorEndUserIdentity
+      properties:
+        idOnExternalPlatform:
+          type: string
+        deletedOnExternalPlatform:
+          type: boolean
+          default: false
+        url:
+          type: string
+        direction:
+          enum:
+            - inbound
+            - outbound
+          default: inbound
+          type: string
+        createdAtWithMilliseconds:
+          type: string
+          format: date-time
+          example: '2019-10-12T03:20:50.52-04:00'
+        tagIds:
+          type: array
+          items:
+            type: integer
+          default: []
+        reactionStatistics:
+          $ref: '#/components/schemas/ReactionStatistics'
+        thread:
+          allOf:
+            - $ref: '#/components/schemas/ThreadToCreate'
+          required:
+            - idOnExternalPlatform
+        replyToMessage:
+          $ref: '#/components/schemas/ReplyToMessage'
+        title:
+          type: string
+        messageContent:
+          $ref: '#/components/schemas/MessageContent'
+        authorEndUserIdentity:
+          $ref: '#/components/schemas/AuthorCustomerIdentity'
+        browserFingerprint:
+          $ref: '#/components/schemas/DeviceFingerprint'
+        contact:
+          $ref: '#/components/schemas/ContactInformation'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipient'
+    SendOutbound:
+      type: object
+      required:
+        - messageContent
+        - recipients
+      properties:
+        thread:
+          $ref: '#/components/schemas/ThreadToCreate'
+        replyToMessage:
+          allOf:
+            - $ref: '#/components/schemas/ReplyToMessage'
+          description: Can be used to build multilevel structure of message thread
+        messageContent:
+          $ref: '#/components/schemas/MessageContent'
+        title:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        contact:
+          $ref: '#/components/schemas/ContactInformation'
+        recipients:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Recipient'
+        browserFingerprint:
+          $ref: '#/components/schemas/DeviceFingerprint'
+    SendInbound:
+      type: object
+      required:
+        - messageContent
+        - authorCustomerIdentity
+      properties:
+        messageContent:
+          $ref: '#/components/schemas/MessageContent'
+        authorCustomerIdentity:
+          $ref: '#/components/schemas/AuthorCustomerIdentity'
+        thread:
+          $ref: '#/components/schemas/ThreadToCreate'
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipient'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        contact:
+          type: object
+          properties:
+            customFields:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomFieldToCreate'
+    MessageDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        idOnExternalPlatform:
+          type: string
+        isDeletedOnExternalPlatform:
+          type: boolean
+        isHiddenOnExternalPlatform:
+          type: boolean
+        isReplyAllowed:
+          description: Define if it is possible to reply on particular message
+          type: boolean
+        url:
+          type: string
+          nullable: true
+          format: url
+        direction:
+          type: string
+          enum:
+            - inbound
+            - outbound
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-10-12T03:20:50-04:00'
+        authorEndUserIdentity:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AuthorCustomerIdentity'
+        reactionStatistics:
+          $ref: '#/components/schemas/ReactionStatistics'
+        messageContent:
+          $ref: '#/components/schemas/MessageContent'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        authorNameRemoved:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ContentRemoved'
+        contentRemoved:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ContentRemoved'
+        authorUser:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+        contactNumber:
+          type: string
+        customerStatistics:
+          type: object
+          properties:
+            seenAt:
+              type: string
+              nullable: true
+              format: date-time
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipient'
+        replyChannel:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ChannelV2'
+        replyToMessage:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ReplyToMessage'
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        threadId:
+          type: string
+        threadIdOnExternalPlatform:
+          type: string
+        title:
+          type: string
+        userStatistics:
+          type: object
+          properties:
+            createdToReadSeconds:
+              type: object
+              nullable: true
+              properties:
+                notReflectingBusinessHours:
+                  type: integer
+                reflectingBusinessHours:
+                  type: integer
+            readAt:
+              type: string
+              nullable: true
+              format: date-time
+            seenAt:
+              type: string
+              nullable: true
+              format: date-time
+    Tag:
+      title: Tag data definition
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the tag (platform specific)
+          minimum: 1
+          example: 1145
+        color:
+          type: string
+          description: RGB representation of color
+          minLength: 7
+          example: '#FF0000'
+        title:
+          type: string
+          description: Title of the tag
+          example: Some tag name
+      required:
+        - id
+        - title
+    NoteStatus:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - new
+            - checked
+    MessageNote:
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - user
+        - content
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique ID of the note
+          example: c3bb560e-de82-4381-bbe2-133e1655716d
+        createdAt:
+          type: string
+          format: date-time
+          example: '2020-10-01T15:55:00+02:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2020-10-01T15:55:00+02:00'
+        user:
+          $ref: '#/components/schemas/User'
+        currentAssignee:
+          $ref: '#/components/schemas/User'
+        message:
+          $ref: '#/components/schemas/MessageMinimum'
+        content:
+          type: string
+          description: Note's content
+          example: Note's content
+        status:
+          $ref: '#/components/schemas/NoteStatus'
+    ThreadToCreate:
+      type: object
+      properties:
+        idOnExternalPlatform:
+          type: string
+          description: Unique ID of the thread on external platform e.g. Facebook post ID
+        threadName:
+          type: string
+          description: 'E.g. Email subject, forum thread title...'
+          default: ''
+    ReplyToMessage:
+      type: object
+      properties:
+        idOnExternalPlatform:
+          type: string
+          description: ID of parent message. Only for channels with hasTreeStructure is true
+    ReactionStatistics:
+      type: object
+      properties:
+        likes:
+          type: integer
+        shares:
+          type: integer
+        isLikedByChannel:
+          type: boolean
+        isSharedByChannel:
+          type: boolean
+    AuthorCustomerIdentity:
+      type: object
+      required:
+        - idOnExternalPlatform
+      properties:
+        idOnExternalPlatform:
+          type: string
+          description: 'Unique ID of user on external platform, e.g. Facebook user ID'
+        firstName:
+          type: string
+        lastName:
+          type: string
+        nickname:
+          type: string
+        image:
+          type: string
+          description: 'URL to Consumer image, it has to be availble from public internet so DFO can download the image into its own file storage.'
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
+    CustomField:
+      title: Custom field value
+      type: object
+      properties:
+        ident:
+          type: string
+          minLength: 1
+          maxLength: 255
+        value:
+          type: string
+          maxLength: 1024
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - ident
+        - value
+    CustomFieldToCreate:
+      title: Custom field value to create
+      type: object
+      properties:
+        ident:
+          type: string
+          minLength: 1
+          maxLength: 255
+        value:
+          type: string
+          maxLength: 1024
+      required:
+        - ident
+        - value
+    Attachment:
+      type: object
+      required:
+        - friendlyName
+        - url
+      properties:
+        friendlyName:
+          type: string
+        url:
+          type: string
+    Recipient:
+      type: object
+      required:
+        - idOnExternalPlatform
+      properties:
+        idOnExternalPlatform:
+          type: string
+          description: Customer's ID on external platform
+        name:
+          type: string
+        isPrimary:
+          type: boolean
+        isPrivate:
+          type: boolean
+    DeviceFingerprint:
+      title: Browser fingerprint definition
+      type: object
+      properties:
+        browser:
+          type: string
+        browserVersion:
+          type: string
+        os:
+          type: string
+        osVersion:
+          type: string
+        language:
+          type: string
+        ip:
+          type: string
+        location:
+          type: string
+        country:
+          type: string
+        deviceType:
+          type: string
+        deviceToken:
+          type: string
+        applicationType:
+          type: string
+        supportedMessageTypes:
+          type: array
+          items:
+            type: string
+            enum:
+              - LIST_PICKER
+              - PLUGIN
+              - POSTBACK
+              - QUICK_REPLIES
+              - RICH_LINK
+              - TEXT
+              - UNSUPPORTED
+    Customer:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: Internal Customer's ID
+        firstName:
+          type: string
+        surname:
+          type: string
+        fullName:
+          type: string
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
+        image:
+          type: string
+          description: URL to Customer's avatar
+          example: 'https://app-eu1.brandembassy.test/img/user-default.png'
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorCustomerIdentity'
+    CustomerNote:
+      type: object
+      required:
+        - id
+        - user
+        - createdAt
+        - updatedAt
+        - content
+      properties:
+        id:
+          type: string
+          minLength: 1
+        user:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        content:
+          type: string
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of Contact (case) where message is located.
+        contactId:
+          type: string
+          format: uuid
+          description: ID of Contact in uuid format.
+        customerContactId:
+          type: string
+          format: uuid
+          description: ID of Customer Contact.
+        interactionId:
+          type: string
+          format: uuid
+          description: ID of Interaction.
+        abandon:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ContactAbandon'
+        authorEndUserIdentity:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AuthorCustomerIdentity'
+        consumerContactStorageId:
+          type: string
+          description: ID of contact storage where message is stored. This is internal ID of DFO and by additional post processing this ID may change. That's why you should always rely on Message.idOnExternalPlatform and on Thread.idOnExternalPlatform.
+        channelId:
+          type: string
+        direction:
+          enum:
+            - inbound
+            - outbound
+          type: string
+        detailUrl:
+          type: string
+          format: url
+          example: 'https://app-de-na1.niceincontact.com/care?redirect=no#/care/tab/b0fd697c-461e-41bb-a257-8bd79e3288c7/case/316335'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-10-12T03:20:50-04:00'
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
+        endUser:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Customer'
+        inboxAssigneeUser:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+        inboxPreAssigneeUser:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+        ownerAssigneeUser:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipient'
+        routingQueueId:
+          type: string
+          nullable: true
+          format: uuid
+          description: ID of routing queue where contact is currently assigned
+        routingQueuePriority:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        statistics:
+          $ref: '#/components/schemas/ContactStatistics'
+        status:
+          $ref: '#/components/schemas/ContactStatus'
+        statusUpdatedAt:
+          type: string
+          format: date-time
+        threadId:
+          type: string
+        threadIdOnExternalPlatform:
+          type: string
+        userFingerprint:
+          $ref: '#/components/schemas/DeviceFingerprint'
+    ContactStatusUpdate:
+      title: Update Contact Status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - closed
+            - escalated
+            - new
+            - open
+            - pending
+            - resolved
+            - trashed
+        updatedByUserId:
+          type: integer
+          minimum: 0
+      required:
+        - status
+    ContactRoutingQueueUpdate:
+      title: Update Routing queue on Contact
+      type: object
+      properties:
+        routingQueueId:
+          type: string
+          format: uuid
+        skillId:
+          type: integer
+          minimum: 1
+      oneOf:
+        - required:
+            - routingQueueId
+        - required:
+            - skillId
+    ContactInboxAssignmentUpdate:
+      title: Assign user to a contact as inbox assignee
+      type: object
+      properties:
+        userId:
+          type: integer
+          minimum: 1
+        inboxAssignee:
+          type: integer
+          minimum: 1
+        inboxAssigneeCxoneId:
+          type: string
+          minLength: 1
+        assignedBy:
+          type: integer
+          minimum: 1
+        assignedByCxoneId:
+          type: string
+          minLength: 1
+        metaData:
+          type: object
+        note:
+          type: object
+          properties:
+            text:
+              type: string
+          required:
+            - text
+      oneOf:
+        - required:
+            - userId
+        - required:
+            - inboxAssignee
+        - required:
+            - inboxAssigneeCxoneId
+    ContactStatistics:
+      title: Contact statistics (SLA ...)
+      type: object
+      properties:
+        inboxAssigneeResponseTime:
+          type: object
+          title: SLA response time statistics for Contact
+          properties:
+            valueInSeconds:
+              type: integer
+              minimum: 0
+              default: 0
+            slaInSeconds:
+              type: integer
+              default: null
+              nullable: true
+            slaEnabled:
+              type: boolean
+              default: false
+            isRunning:
+              type: boolean
+              default: false
+          required:
+            - valueInSeconds
+            - slaInSeconds
+            - slaEnabled
+            - isRunning
+      required:
+        - inboxAssigneeResponseTime
+    ContactAbandon:
+      title: Abandon
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - abandon
+            - expired
+            - shortAbandon
+        abandonedAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - abandonedAt
+    ContactStatus:
+      type: string
+      enum:
+        - closed
+        - escalated
+        - new
+        - open
+        - pending
+        - resolved
+        - trashed
+    Sentiment:
+      type: string
+      enum:
+        - neutral
+        - positive
+        - negative
+    MessageContent:
+      type: object
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          type: string
+          enum:
+            - TEXT
+            - PLUGIN
+            - QUICK_REPLIES
+            - LIST_PICKER
+            - RICH_LINK
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/TextPayload'
+            - $ref: '#/components/schemas/ElementsPayload'
+            - $ref: '#/components/schemas/QuickRepliesPayload'
+            - $ref: '#/components/schemas/ListPickerPayload'
+            - $ref: '#/components/schemas/RichLinkPayload'
+        fallbackText:
+          type: string
+        postback:
+          type: string
+          nullable: true
+      example:
+        $ref: '#/components/examples/MessageContentExample'
+    ElementsPayload:
+      type: object
+      properties:
+        postback:
+          type: string
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Element'
+    QuickRepliesPayload:
+      type: object
+      required:
+        - text
+        - actions
+      properties:
+        text:
+          $ref: '#/components/schemas/PayloadTextField'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionButton'
+    RichLinkPayload:
+      type: object
+      required:
+        - title
+        - media
+        - url
+      properties:
+        media:
+          $ref: '#/components/schemas/PayloadMediaField'
+        title:
+          $ref: '#/components/schemas/PayloadTextField'
+        url:
+          type: string
+          format: url
+          example: 'https://www.niceincontact.com/'
+    ListPickerPayload:
+      type: object
+      required:
+        - title
+        - text
+        - actions
+      properties:
+        title:
+          $ref: '#/components/schemas/PayloadTextField'
+        text:
+          $ref: '#/components/schemas/PayloadTextField'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionButton'
+    PayloadMediaField:
+      type: object
+      required:
+        - fileName
+        - mimeType
+        - url
+      properties:
+        fileName:
+          type: string
+          example: image.jpg
+        mimeType:
+          type: string
+          example: image/jpeg
+        url:
+          type: string
+          format: url
+          example: 'https://www.example.com/image.png'
+    PayloadTextField:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+    TextPayload:
+      type: object
+      properties:
+        text:
+          type: string
+    ActionButton:
+      type: object
+      required:
+        - text
+        - type
+      properties:
+        text:
+          type: string
+        type:
+          type: string
+          enum:
+            - REPLY_BUTTON
+        postback:
+          type: string
+        icon:
+          $ref: '#/components/schemas/PayloadMediaField'
+        description:
+          type: string
+    Element:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        type:
+          type: string
+          enum:
+            - TEXT
+            - BUTTON
+            - MENU
+            - TITLE
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Element'
+    CustomerCustomFieldDefinition:
+      type: object
+      required:
+        - ident
+      properties:
+        ident:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum:
+            - text
+            - email
+            - list
+        isRequired:
+          type: boolean
+          default: false
+        isEditable:
+          type: boolean
+          default: false
+        isVisibleInRightPanel:
+          type: boolean
+          default: false
+        isVisibleInCustomerCard:
+          type: boolean
+          default: true
+    CustomFieldDefinition:
+      type: object
+      properties:
+        ident:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum:
+            - text
+        required:
+          type: boolean
+        visibleInPostDetail:
+          type: boolean
+        visibleInLiveChat:
+          type: boolean
+        isEditable:
+          type: boolean
+    SetContentRemoved:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/ContentRemovedReason'
+    ContentRemoved:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/ContentRemovedReason'
+        removedAt:
+          type: string
+          format: date-time
+    ContentRemovedReason:
+      type: string
+      enum:
+        - GDPR
+        - TTL
+        - other
+    RoutingQueue:
+      type: object
+      required:
+        - id
+        - name
+        - isSubqueue
+        - isDeleted
+      properties:
+        id:
+          type: string
+          example: 0c20a6b9-1427-4d8f-937d-7c3a48ab7555
+        name:
+          type: string
+          example: The routing queue name
+        isSubqueue:
+          type: boolean
+          example: false
+        isDeleted:
+          type: boolean
+          example: false
+    QuickResponse:
+      type: object
+      required:
+        - id
+        - type
+        - title
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        type:
+          type: string
+          enum:
+            - plainText
+            - htmlText
+            - dynamicContent
+            - complexHtmlText
+        url:
+          type: string
+          format: uri
+        hasVariables:
+          type: boolean
+        title:
+          type: string
+        content:
+          type: string
+        externalVariables:
+          type: array
+          items:
+            type: string
+    Links:
+      type: object
+      properties:
+        self:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+  examples:
+    MessageContentExample:
+      value:
+        type: TEXT
+        payload:
+          text: Hello world!
+    SendOutboundTextToExistingThread:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: TEXT
+          payload:
+            text: Hello world!
+        attachments:
+          - friendlyName: my-image.png
+            url: 'https://picsum.photos/300/150'
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundEmailExample:
+      value:
+        thread:
+          threadName: Subject line
+        messageContent:
+          type: TEXT
+          payload:
+            text: <p>Hello world!</p>
+        title: Subject line
+        attachments:
+          - friendlyName: my-image.png
+            url: 'https://picsum.photos/300/150'
+        recipients:
+          - idOnExternalPlatform: to-recipient@domain.com
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+          - idOnExternalPlatform: cc-recipient@domain.com
+            name: Johny Walker
+            isPrimary: false
+            isPrivate: false
+          - idOnExternalPlatform: bcc-recipient@domain.com
+            name: Jack Sparrow
+            isPrimary: false
+            isPrivate: true
+    SendOutboundExampleQuickReplies:
+      value:
+        messageContent:
+          type: QUICK_REPLIES
+          fallbackText: Text sent if rich message is not available on external platform
+          payload:
+            text:
+              content: 'Hello, we will deliver the package between 12:00 and 16:00. Please specify which day.'
+            actions:
+              - type: REPLY_BUTTON
+                text: Today
+                postback: /today
+              - type: REPLY_BUTTON
+                text: Tomorrow
+                postback: /today
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+    SendOutboundExampleListPicker:
+      value:
+        messageContent:
+          type: LIST_PICKER
+          fallbackText: Text sent if list picker is not available on external platform
+          payload:
+            title:
+              content: Please select a product
+            text:
+              content: Here is our product list
+            actions:
+              - type: REPLY_BUTTON
+                text: Red T-Shirt
+                icon:
+                  fileName: red-t-shirt.png
+                  mimeType: image/png
+                  url: 'https://example.com/red-t-shirt.png'
+                description: 'Size: M, Color: Red'
+                postback: /red-t-shirt
+              - type: REPLY_BUTTON
+                text: Blue T-Shirt
+                description: 'Size: M, Color: Blue'
+                postback: /blue-t-shirt
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+    SendOutboundExampleRichLink:
+      value:
+        messageContent:
+          type: RICH_LINK
+          fallbackText: Text sent if rich link is not available on external platform
+          payload:
+            title:
+              content: Rich link title
+            media:
+              fileName: rich-link-image.png
+              mimeType: image/png
+              url: 'https://picsum.photos/300/150'
+            url: 'https://www.google.com'
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+    SendOutboundWhatsappExampleTemplate:
+      value:
+        messageContent:
+          type: PLUGIN
+          payload:
+            postback: '{"whatsAppTemplateName":"whats_app_test_message_template_511112","namespace":"b7d932ac_1d01_8469_8905_0a70917c3cf1","language":"en"}'
+            elements:
+              - id: element-1
+                type: TEXT_TEMPLATE
+                template: 'Dear {{var1}}, this month’s subscription invoice amount is {{var2}}. Payment is due by {{var3}}. Have a nice day!'
+                variables:
+                  - var1: Tomas
+                    var2: $100
+                    var3: January
+        recipients:
+          - idOnExternalPlatform: '13009884777'
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundChatExampleMenu:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: PLUGIN
+          payload:
+            elements:
+              - id: Ek4tPy1h4
+                type: MENU
+                elements:
+                  - id: Uk4tPy1h2
+                    type: FILE
+                    url: 'https://picsum.photos/300/150'
+                    filename: photo.jpg
+                    mimeType: image/jpeg
+                  - id: Ck4tPy1h3
+                    type: TITLE
+                    text: Hello!
+                  - id: Ek4tPy1h1
+                    type: TEXT
+                    text: Lorem Impsum...
+                  - id: Nkm0hRAiE
+                    type: BUTTON
+                    text: Click me!
+                    postback: click-on-button-1
+                  - id: EyCyTRCi4
+                    type: BUTTON
+                    text: Aww don`t click on me
+                    postback: click-on-button-2
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundChatExampleGallery:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: PLUGIN
+          payload:
+            elements:
+              - id: Ek4tPy1h4
+                type: MENU
+                elements:
+                  - id: Uk4tPy1h2
+                    type: FILE
+                    url: 'https://picsum.photos/300/150'
+                    filename: photo.jpg
+                    mimeType: image/jpeg
+                  - id: Ck4tPy1h3
+                    type: TITLE
+                    text: Hello!
+                  - id: Ek4tPy1h1
+                    type: TEXT
+                    text: Lorem Impsum...
+                  - id: Nkm0hRAiE
+                    type: BUTTON
+                    text: Click me!
+                    postback: click-on-button-1
+                  - id: EyCyTRCi4
+                    type: BUTTON
+                    text: Aww don`t click on me
+                    postback: click-on-button-2
+              - id: Ek4tPy1h52
+                type: MENU
+                elements:
+                  - id: Uk4tPy1h22
+                    type: FILE
+                    url: 'https://picsum.photos/300/150'
+                    filename: photo.jpg
+                    mimeType: image/jpeg
+                  - id: Ck4tPy1h32
+                    type: TITLE
+                    text: Hello!
+                  - id: Ek4tPy1h12
+                    type: TEXT
+                    text: Lorem Impsum...
+                  - id: Nkm0hRAiE2
+                    type: BUTTON
+                    text: Click me!
+                    postback: click-on-button-1
+                  - id: NkGJ6CAiN2
+                    type: BUTTON
+                    text: Aww don`t click on me
+                    postback: click-on-button-2
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundChatExampleTextAndButtons:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: PLUGIN
+          payload:
+            elements:
+              - id: Ek4tPy1h4
+                type: TEXT_AND_BUTTONS
+                elements:
+                  - id: Ck4tPy1h3
+                    type: TEXT
+                    text: Lorem Impsum...
+                  - id: Ek4tPy1h1
+                    type: TEXT
+                    text: Lorem Impsum...
+                  - id: Nkm0hRAiE
+                    type: BUTTON
+                    text: Click me!
+                    postback: click-on-button-1
+                  - id: EyCyTRCi4
+                    type: BUTTON
+                    text: Aww don`t click on me
+                    postback: click-on-button-2
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundChatExampleDeepLink:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: PLUGIN
+          payload:
+            elements:
+              - id: Nkm0hRAiE
+                type: BUTTON
+                text: See this page
+                postback: '{"type":"deepLink","deepLink":"fb://profile/33138223345"}'
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendOutboundChatExampleCustomElement:
+      value:
+        thread:
+          idOnExternalPlatform: 2d2dbf24-7564-4388-b35e-6c5b60093022
+        messageContent:
+          type: PLUGIN
+          payload:
+            elements:
+              - id: Nkm0hRAiE
+                type: CUSTOM
+                text: See this page
+                variables:
+                  color: green
+                  buttons:
+                    - id: 0edc9bf6-4922-4695-a6ad-1bdb248dd42f
+                      name: Confirm
+                    - id: 0b4ad5a5-5f6b-477d-8013-d6dcf7b87704
+                      name: Decline
+                  size:
+                    ios: big
+                    android: middle
+        recipients:
+          - idOnExternalPlatform: 1212foo
+            name: John Doe
+            isPrimary: true
+            isPrivate: false
+    SendInboundText:
+      value:
+        thread:
+          threadName: Test thread name
+        messageContent:
+          type: TEXT
+          payload:
+            text: This is successfully created inbound message.
+        authorCustomerIdentity:
+          idOnExternalPlatform: will.smith@hollywood.com
+          firstName: Will
+          lastName: Smith
