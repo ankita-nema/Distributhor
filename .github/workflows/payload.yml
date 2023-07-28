@@ -9,7 +9,7 @@ on:
 
 jobs:
   send_payload:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     
     steps:
