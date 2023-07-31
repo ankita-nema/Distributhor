@@ -1285,7 +1285,7 @@ paths:
     get:
       tags:
         - Customer
-      summary: Get definition of Customer's Custom Fields
+      summary: Get definition of Customer's Custom Fieldssjc
       responses:
         '200':
           description: Ok
