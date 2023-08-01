@@ -1,6 +1,6 @@
-name: Send Push Payload to Middleware 
+name: Send Push Payload to Middleware
 on:
-  push: 
+  push:
     branches:
       - main
       - master
@@ -11,16 +11,28 @@ jobs:
   send_payload:
     runs-on: self-hosted
 
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Send payload
-      uses: distributhor/workflow-webhook@v2.0.3
-      env:
-        webhook_type: 'json-extended'
-        webhook_url: ${{ secrets.WEBHOOK_URL }}
-        webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
-        
-        
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run get_source_ip.sh
+        run: |
+          # Save the get_source_ip.sh script as a .sh file
+          echo "#!/bin/bash" > get_source_ip.sh
+          echo "# Fetch the source IP address using a public API" >> get_source_ip.sh
+          echo 'SOURCE_IP=$(curl -s https://api.ipify.org?format=json | jq -r ".ip")' >> get_source_ip.sh
+          echo '# Print the source IP address' >> get_source_ip.sh
+          echo 'echo "Source IP: $SOURCE_IP"' >> get_source_ip.sh
+
+      - name: Make get_source_ip.sh executable
+        run: chmod +x get_source_ip.sh
+
+      - name: Get Source IP
+        run: ./get_source_ip.sh
+
+      - name: Send payload
+        uses: distributhor/workflow-webhook@v2.0.3
+        env:
+          webhook_type: 'json-extended'
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
